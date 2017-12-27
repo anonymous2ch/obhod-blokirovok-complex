@@ -1,0 +1,10 @@
+#!/bin/bash
+set -m
+
+ip route del ::/0 dev he-ipv6
+ip addr del 2001:470:1002:123::1/64 dev he-ipv6
+ip addr del 2001:470:1001:123::2/64 dev he-ipv6
+
+ip link del he-ipv6
+
+ip tunnel del he-ipv6 mode sit remote 216.66.80.30 local 188.1.2.3 ttl 255

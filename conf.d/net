@@ -1,0 +1,5 @@
+dns_domain_lo="fuckrkn"
+config_eth0="188.1.2.3/24
+	     123.123.123.123/32"
+routes_eth0="default via 188.1.2.1"
+dns_servers_eth0="10.222.1.1 127.0.0.1"

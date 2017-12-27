@@ -1,0 +1,5 @@
+#!/bin/bash
+set -m
+
+iptables -t nat -D PREROUTING -i tunopenvpn -p tcp -m tcp -d 123.123.123.123 -j REDIRECT --to-ports 3129
+

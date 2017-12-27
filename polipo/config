@@ -1,0 +1,15 @@
+daemonise=false
+diskCacheRoot=/var/cache/polipo/
+proxyAddress=127.0.0.1
+proxyPort=9051
+proxyName=localhost
+serverSlots=50
+serverMaxSlots=180
+cacheIsShared=false
+allowedClients=127.0.0.1
+socksParentProxy = "10.222.1.1:9050"
+socksProxyType = socks5
+clientTimeout=2m
+dnsGethostbynameTtl=60m
+dnsMaxTimeout=1m
+

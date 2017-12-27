@@ -1,0 +1,32 @@
+User tor
+
+PIDFile /var/run/tor/tor.pid
+
+SOCKSPort 10.222.1.1:9050 # Default: Bind to localhost:9050 for local connections.
+SOCKSPort 127.0.0.1:9050 # Default: Bind to localhost:9050 for local connections.
+
+SOCKSPolicy accept 10.222.1.0/24
+SOCKSPolicy accept 192.168.222.0/24
+SOCKSPolicy accept 127.0.0.1
+SOCKSPolicy reject *
+
+Log notice file /var/log/tor/notices.log
+
+Log warn syslog
+
+DataDirectory   /var/lib/tor/data
+
+SocksTimeout 360
+
+RelayBandwidthRate 2000 KBytes  # Throttle traffic to 100KB/s (800Kbps)
+RelayBandwidthBurst 6000 KBytes # But allow bursts up to 200KB (1600Kb)
+
+MaxAdvertisedBandwidth 1000 KBytes
+
+ConnLimit 1500
+LogMessageDomains 1
+EnforceDistinctSubnets 1
+SafeSocks 1
+DownloadExtraInfo 1
+
+ExitPolicy reject *:* # no exits allowed

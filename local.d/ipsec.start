@@ -1,0 +1,12 @@
+#!/bin/bash
+set -m
+
+ip tunnel add tunipsec mode gre remote 41.4.5.6 local 188.1.2.3 dev eth0
+ip addr add 192.168.222.1/24 dev tunipsec
+ip link set tunipsec up
+ip route restore table 128 < /etc/iproutes.table128
+ethtool --offload  tunipsec  rx off  tx off
+ethtool -K tunipsec gso off
+
+/etc/init.d/dnsmasq restart
+/etc/init.d/squid restart

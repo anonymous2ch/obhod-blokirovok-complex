@@ -1,0 +1,5 @@
+#!/bin/bash
+set -m
+
+ip route save table 128 > /etc/iproutes.table128
+ip tunnel del tunipsec
