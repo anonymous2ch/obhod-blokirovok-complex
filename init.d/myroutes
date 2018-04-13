@@ -1,0 +1,67 @@
+#!/sbin/openrc-run
+
+name="My Routes"
+
+description="Get new routes from RKN"
+
+depend() {
+need net
+after mynetworks
+before openvpn
+before bird
+}
+
+restartdelay() {
+  stop
+  sleep 3    # Wait 3 seconds before starting again
+  start
+}
+
+start() {
+
+ebegin "Getting new routes"
+
+ip route flush table 128
+
+
+new_etag=$(curl -s -I "https://raw.githubusercontent.com/zapret-info/z-i/master/dump.csv"  | grep ETag | cut -f 2 -d : | sed 's/[^0-9a-f]*//g' )
+old_etag=$(cat /etc/rkn-etag)
+
+
+if [ ${#new_etag} -eq 40 ];then
+
+if [ "$new_etag" != "$old_etag" ];then
+    curl -s "https://raw.githubusercontent.com/zapret-info/z-i/master/dump.csv" > /etc/rkn-dump.csv
+    echo "$new_etag" > /etc/rkn-etag
+fi
+fi
+
+/usr/local/sbin/openvpn.sh
+
+cat /etc/openvpn/DEFAULT | sed 's/push "route /ip route add /' | sed 's/ 255.255.255.0"/\/24 dev tunipsec table 128/' | sed 's/"/\/32 dev tunipsec table 128/' > /etc/rkn-routes
+
+host www.kasparov.ru |  grep 'has address' | sed -e 's/.*\ has\ address\ //' | grep -E '([0-9]{1,3}[\.]){3}[0-9]{1,3}' | sed -e 's/^/ip route add /' | sed -e 's/$/\/32 dev tunipsec table 128/' >> /etc/rkn-routes
+
+host lurkmore.to |  grep 'has address' | sed -e 's/.*\ has\ address\ //' | grep -E '([0-9]{1,3}[\.]){3}[0-9]{1,3}' | sed -e 's/^/ip route add /' | sed -e 's/$/\/32 dev tunipsec table 128/' >> /etc/rkn-routes
+host kasparov.ru |  grep 'has address' | sed -e 's/.*\ has\ address\ //' | grep -E '([0-9]{1,3}[\.]){3}[0-9]{1,3}' | sed -e 's/^/ip route add /' | sed -e 's/$/\/32 dev tunipsec table 128/' >> /etc/rkn-routes
+host rutracker.org |  grep 'has address' | sed -e 's/.*\ has\ address\ //' | grep -E '([0-9]{1,3}[\.]){3}[0-9]{1,3}' | sed -e 's/^/ip route add /' | sed -e 's/$/\/32 dev tunipsec table 128/' >> /etc/rkn-routes
+echo 'ip route add 123.123.123.123/32 dev tunipsec table 128' >> /etc/rkn-routes
+echo 'ip route add 8.8.8.8/32 dev tunipsec table 128' >> /etc/rkn-routes
+echo 'ip route add 8.8.4.4/32 dev tunipsec table 128' >> /etc/rkn-routes
+echo 'ip route add 192.168.123.0/24 dev tunipsec' >> /etc/rkn-routes
+
+cat /etc/rkn-routes | sort -u | sh
+
+eend $?
+
+}
+
+stop() {
+
+ebegin "Deleting routes"
+
+
+ip route flush table 128
+
+eend $?
+}
