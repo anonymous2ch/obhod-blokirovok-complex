@@ -25,6 +25,7 @@
 Прочее:
 
 1. Телефон на Android, с установленным [StrongSwan VPN](https://play.google.com/store/apps/details?id=org.strongswan.android)
+2. Телефон с установленным Telegram
 
 Адреса сетей и интерфейсов:
 ---------------------------
