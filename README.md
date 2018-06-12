@@ -1,5 +1,73 @@
 # obhod-blokirovok-complex
 
+Configuration explanation
+======================
+
+Physical devices:
+----------------------
+
+Nice country without Putin or Internet Censorship:
+
+1. Server (gentoo linux), has an external IP: `188.1.2.3`. It runs: `squid`, `polipo`, `tor`, `i2p`, `openvpn`, `strongswan`, `bird`, `dnsmasq` and `dante`
+2. `6to4` tunnel service from https://tunnelbroker.net
+
+My home apartment:
+
+1. Hardware router [mikrotik hAP](https://mikrotik.com/product/RB951Ui-2nD), its external IP `41.4.5.6`
+2. Home PC (Windows) connected to the router via ethernet-cable
+3. Laptops, phones and other devices, connected to router via Wi-Fi with WPA2-PSK auth
+4. Guest laptops, phones connected via Wi-Fi without auth (free Wi-Fi)
+
+Another apartment (without mikrotik router):
+
+1.  Home PC (Windows) connected to the Internet via any ordinary means. It has OpenVPN client, that while being a bit slow, will prevent censorship just as good.
+
+Other:
+
+1. Android phone, with [StrongSwan VPN](https://play.google.com/store/apps/details?id=org.strongswan.android)
+2. Android phone(s) with Telegram
+
+Network interfaces & their addresses):
+---------------------------
+
+Physical IPv4:
+
+1. My internal home network (which is served by that mikrotik i mentioned earlier), wi-fi and ethernet interfaces are bridged. IP Address: `192.168.123.1`, subnet `192.168.123.0/24`
+2. Free Wi-Fi for guests `10.123.123.1`, isolated subnet `10.123.123.0/24`
+3. External IPv4-address, that is given to mikrotik by my ISP `41.4.5.6`
+4. External IPv4-address of the VPS/Server in a country without censorship: `188.1.2.3`, linux device name: `eth0`
+
+IPv6:
+
+1. My internal home network - IP Address: `2001:470:abcd:2::1/64`, subnet `2001:470:abcd:2::/64`
+2. Free Wi-Fi for guests `2001:470:abcd:1::1/64`, isolated subnet `2001:470:abcd:1::/64`
+3. `6to4` tunnel from mikrotik, IPv6:`2001:470:11:678::2/64`, IPv4:`41.4.5.6`, tunnelbroker.net endpoint: IPv6:`2001:470:11:678::1`, IPv4:`216.66.80.90`, prefix: `2001:470:abcd::/48`, prefix: `2001:470:12:678::/64`
+4. `6to4` tunnel on the VPS/Server in a country without censorship instead of native ipv6 (I don't like the way they write my name & surname into public whois database for native ipv6), linux device name: `he-ipv6`, IPv6:`2001:470:1001:123::2/64`, IPv4:`188.1.2.3`,  tunnelbroker.net endpoint IPv6:`2001:470:1001:123::1/64`, IPv4:`216.66.80.30`, prefix: `2001:470:1002:123::/64`
+
+Virtual Networks & tunnels:
+
+1. Tunnel between mikrotik and VPS/Server in a country without censorship (linux device name: `tunipsec`), Tunnel technology: GRE over IPSsec (`strongswan`), Serverside Address: `192.168.222.1`, mikrotikside address: `192.168.222.2`, subnet mask `255.255.255.0`
+2. `OpenVPN` network on that VPS/Server (server address: `10.222.1.1`, linux device name: `tunopenvpn`) client ip addresses pool: (`10.222.1.10-254`), netmask `10.222.1.0/24`
+3. Tunnel between mobile strongswan vpn and that VPS/Server in a country without censorship (`10.0.1.0/24`)
+
+Misc Addresses:
+
+1. Virtual IP for tor/i2p: `123.123.123.123`
+
+
+That's all you might need for reading the configs...
+
+How does it work:
+1. Script `/usr/local/bin/bgp.sh` gets [csv-table with censored IP-addresses](https://raw.githubusercontent.com/zapret-info/z-i/master/dump.csv) puts them into kernel table #128, which is not used by the system when routing.
+2. BGP Bird server monitors that table and sends them to Mikrotik (using local AS 65000 (Bird) and 64496 (Mikrotik))
+3. Mikrotik has static routes to 8.8.8.8 и 8.8.4.4, via VPS/Server, which in turn intercepts DNS-queries and modifies them.
+4. `dnsmasq` answers `123.123.123.123` for everything in `.onioin` and `.i2p` zone. Traffic to `123.123.123` is then intercepted via `squid`, which sends it to `Polipo`->`Tor Socks5 Proxy` or directly to `i2p https proxy` as needed
+
+TODO: Add DN42
+
+
+# obhod-blokirovok-complex
+
 Описание конфигурации
 ======================
 
@@ -63,4 +131,4 @@ IPv6:
 3. В Микротике настроены статичные маршруты к серверам гугла 8.8.8.8 и 8.8.4.4, через удалённый сервер, который в свою очередь настроен на перехват DNS-запросов и обработку их локально.
 4. `dnsmasq` отвечает адресом `123.123.123.123` на все `.onioin` и `.i2p` адреса, на этом адресе. Траффик на этот адрес перехватывается и заворачивается в `squid`, который в свою очередь распределяет его в Polipo->Tor Socks5 Proxy или же напрямую в i2p https proxy
 
-TODO: Более подробное описание принципов работы, комментарии конфигов и однострочники на bash/ansible, позволяющие всё это развернуть за 5 минут
+TODO: Более подробное описание принципов работы, комментарии конфигов и однострочники на bash/ansible, позволяющие всё это развернуть за 5 минут. Добавить DN42
